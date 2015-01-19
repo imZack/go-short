@@ -3,11 +3,13 @@ package main
 import (
 	"database/sql"
 	"errors"
+	"fmt"
 	"github.com/gin-gonic/gin"
 	_ "github.com/mattn/go-sqlite3"
 	"log"
 	"math/rand"
 	"os"
+	"strconv"
 	"time"
 )
 
@@ -16,7 +18,17 @@ const DB_PATH string = "data.db"
 var (
 	CODE_CHAR = []rune("abcdefghijklmnopqrstuvwxyz0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ")
 	DB        *sql.DB
+	PORT      int = 3000
 )
+
+func init() {
+	rand.Seed(time.Now().Unix())
+	if os.Getenv("PORT") != "" {
+		var err error
+		PORT, err = strconv.Atoi(os.Getenv("PORT"))
+		check(err)
+	}
+}
 
 func get_code(n int) string {
 	b := make([]rune, n)
@@ -42,24 +54,30 @@ func check(err error) bool {
 	return true
 }
 
-func init_db() {
-	if _, err := os.Stat(DB_PATH); os.IsNotExist(err) {
+func init_db() (err error) {
+	if _, err = os.Stat(DB_PATH); os.IsNotExist(err) {
 		log.Printf("no such file or directory: %s\n", DB_PATH)
 		log.Printf("create one for you.\n")
-		create_db(DB, DB_PATH)
+		err = create_db(DB, DB_PATH)
+		if !check(err) {
+			return
+		}
 	}
-	var err error
 	DB, err = sql.Open("sqlite3", DB_PATH)
-	check(err)
+	if !check(err) {
+		return
+	}
+	return
 }
 
-func create_db(db *sql.DB, db_path string) {
+func create_db(db *sql.DB, db_path string) (err error) {
 
 	os.Remove(db_path)
 
-	var err error
 	db, err = sql.Open("sqlite3", db_path)
-	check(err)
+	if !check(err) {
+		return
+	}
 
 	sqlStmt := `
 	create table urls (
@@ -71,7 +89,10 @@ func create_db(db *sql.DB, db_path string) {
 	create index urls_code_index on urls(code);
 	`
 	_, err = db.Exec(sqlStmt)
-	check(err)
+	if !check(err) {
+		return
+	}
+	return
 }
 
 func redirect(c *gin.Context) {
@@ -104,26 +125,33 @@ func get_url(code string) (url *Url, err error) {
 
 	stmt, err = DB.Prepare(
 		"select id, url, code, hits, created_at from urls where code = ?")
-	check(err)
+	if !check(err) {
+		return
+	}
 
 	if err = stmt.QueryRow(code).Scan(
 		&url.Id, &url.Url, &url.Code, &url.Hits, &url.Created_at); err != nil {
 		log.Println(err)
 		err = errors.New("Not found")
 	}
-	log.Println(url.Id)
-
 	return
 }
 
-func inc(url *Url) (int64, error) {
+func inc(url *Url) (hits int64, err error) {
 	url.Hits += 1
-	stmt, err := DB.Prepare("update urls set hits = ? where id= ?")
-	check(err)
+	var stmt *sql.Stmt
+	stmt, err = DB.Prepare("update urls set hits = ? where id= ?")
+	if !check(err) {
+		return
+	}
 
 	_, err = stmt.Exec(url.Hits, url.Id)
-	check(err)
-	return url.Hits, err
+	if !check(err) {
+		return
+	}
+
+	hits = url.Hits
+	return
 }
 
 func create(c *gin.Context) {
@@ -191,5 +219,5 @@ func main() {
 	}
 	r.GET("/r/:code", redirect)
 	r.Static("/static", "static")
-	r.Run(":3001")
+	r.Run(fmt.Sprintf(":%d", PORT))
 }
