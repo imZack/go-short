@@ -1,11 +1,11 @@
-go-short
-========
-Shorten url service written in GO
+Go short!
+=========
+Shorten url service written in GO.
 
 API Endpoints
 -------------
 ### Create a short code [/api/v1/urls]
-Create a short code
+Shorten your input url.
 ```
 curl -X POST -H "Content-Type: application/json" \
      -d '{"url": "http://yulun.me"}' \
@@ -21,7 +21,7 @@ curl -X POST -H "Content-Type: application/json" \
 ```
 
 ### Query url by short code [/api/v1/urls/:code]
-Get short code's information
+Get short code's information.
 ```
 curl 'http://localhost:3000/api/v1/urls/1pBnf'
 
@@ -35,15 +35,16 @@ curl 'http://localhost:3000/api/v1/urls/1pBnf'
 ```
 
 ### Redirect [/r/:code]
-Redirect to url by assigned short code with status 301
+Redirect to url by assigned short code with status 301.
 
 **Short code chars**: `abcdefghijklmnopqrstuvwxyz0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ`
 
 
 Demo
 ----
-- [Host by Heroku](http://eit-shorten.herokuapp.com/)
-- [![Deploy](https://www.herokucdn.com/deploy/button.png)](https://heroku.com/deploy?template=https://github.com/imZack/go-short)
+[Demo site](http://eit-shorten.herokuapp.com/) powered by Heroku
+
+[![Deploy](https://www.herokucdn.com/deploy/button.png)](https://heroku.com/deploy?template=https://github.com/imZack/go-short)
 
 
 License
