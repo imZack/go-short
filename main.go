@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/gin-gonic/gin"
-	_ "github.com/mattn/go-sqlite3"
+	_ "github.com/lib/pq"
 	"log"
 	"math/rand"
 	"os"
@@ -55,43 +55,31 @@ func check(err error) bool {
 }
 
 func init_db() (err error) {
-	if _, err = os.Stat(DB_PATH); os.IsNotExist(err) {
-		log.Printf("no such file or directory: %s\n", DB_PATH)
-		log.Printf("create one for you.\n")
-		err = create_db(DB, DB_PATH)
-		if !check(err) {
-			return
-		}
-	}
-	DB, err = sql.Open("sqlite3", DB_PATH)
+	DB, err = sql.Open(
+		"postgres", os.Getenv("DATABASE_URL"))
+
+	err = create_db(DB)
+
 	if !check(err) {
 		return
 	}
 	return
 }
 
-func create_db(db *sql.DB, db_path string) (err error) {
-
-	os.Remove(db_path)
-
-	db, err = sql.Open("sqlite3", db_path)
-	if !check(err) {
-		return
-	}
+func create_db(db *sql.DB) (err error) {
 
 	sqlStmt := `
-	create table urls (
-		id INTEGER not null primary key,
-		url TEXT not null,
-		code TEXT default '',
+	CREATE TABLE IF NOT EXISTS urls (
+		id serial PRIMARY KEY,
+		url TEXT NOT NULL,
+		code varchar(5) default '' UNIQUE,
 		hits INTEGER default 0,
-		created_at DATETIME default current_timestamp);
-	create index urls_code_index on urls(code);
+		created_at timestamp without time zone default (now() at time zone 'utc')
+	);
 	`
 	_, err = db.Exec(sqlStmt)
-	if !check(err) {
-		return
-	}
+	check(err)
+
 	return
 }
 
@@ -124,7 +112,7 @@ func get_url(code string) (url *Url, err error) {
 	var stmt *sql.Stmt
 
 	stmt, err = DB.Prepare(
-		"select id, url, code, hits, created_at from urls where code = ?")
+		"SELECT id, url, code, hits, created_at FROM urls WHERE code = $1")
 	if !check(err) {
 		return
 	}
@@ -140,7 +128,7 @@ func get_url(code string) (url *Url, err error) {
 func inc(url *Url) (hits int64, err error) {
 	url.Hits += 1
 	var stmt *sql.Stmt
-	stmt, err = DB.Prepare("update urls set hits = ? where id= ?")
+	stmt, err = DB.Prepare("UPDATE urls SET hits = $1 WHERE id= $2")
 	if !check(err) {
 		return
 	}
@@ -183,18 +171,14 @@ func create(c *gin.Context) {
 			break
 		}
 
-		stmt, err := tx.Prepare("insert into urls(url, code) values(?, ?)")
+		stmt, err := tx.Prepare(
+			"INSERT INTO urls(url, code) VALUES($1, $2) RETURNING id")
 		if !check(err) {
 			break
 		}
 		defer stmt.Close()
 
-		result, err := stmt.Exec(data.Url, data.Code)
-		if !check(err) {
-			break
-		}
-
-		data.Id, err = result.LastInsertId()
+		err = stmt.QueryRow(data.Url, data.Code).Scan(&data.Id)
 		if !check(err) {
 			break
 		}

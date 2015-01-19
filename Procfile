@@ -1,1 +1,1 @@
-web: go-short -PORT=$PORT
+web: go-short -PORT=$PORT -DATABASE_URL=$HEROKU_POSTGRESQL_TEAL
