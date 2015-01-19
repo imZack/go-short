@@ -1,0 +1,19 @@
+{
+	"ImportPath": "github.com/imZack/go-short",
+	"GoVersion": "go1.4.1",
+	"Deps": [
+		{
+			"ImportPath": "github.com/gin-gonic/gin",
+			"Comment": "v0.4-16-g28b9ff9",
+			"Rev": "28b9ff9e3495dabeaea2da86c100effbf1a68346"
+		},
+		{
+			"ImportPath": "github.com/julienschmidt/httprouter",
+			"Rev": "2913780ee44a32395d9a2cf75ee6382b768f422a"
+		},
+		{
+			"ImportPath": "github.com/mattn/go-sqlite3",
+			"Rev": "d8029554b4cbb9a1c12311d307f4154b515566b4"
+		}
+	]
+}

@@ -1,0 +1,16 @@
+{
+  "name": "eit-shorten",
+  "description": "Shorten your urls.",
+  "keywords": [
+    "Shorten",
+    "Url"
+  ],
+  "website": "https://github.com/imZack/go-short",
+  "repository": "https://github.com/imZack/go-short",
+  "scripts": {
+    "postdeploy": "go-short -PORT=$PORT"
+  },
+  "env": {
+    "BUILDPACK_URL": "https://github.com/kr/heroku-buildpack-go.git"
+  }
+}

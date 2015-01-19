@@ -39,6 +39,13 @@ Redirect to url by assigned short code with status 301
 
 **Short code chars**: `abcdefghijklmnopqrstuvwxyz0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ`
 
+
+Demo
+----
+- [Host by Heroku](http://eit-shorten.herokuapp.com/)
+- [![Deploy](https://www.herokucdn.com/deploy/button.png)](https://heroku.com/deploy?template=https://github.com/imZack/go-short)
+
+
 License
 -------
 [MIT](http://yulun.mit-license.org/)
